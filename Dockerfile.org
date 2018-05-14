@@ -1,0 +1,17 @@
+ 
+FROM centos
+
+RUN yum install -y epel-release
+RUN yum install -y nodejs npm
+
+ADD . /src
+COPY package.json /src/package.json
+RUN cd /src; npm install --save
+
+COPY . /src
+
+#WORKDIR /src
+
+EXPOSE 8080
+CMD ["node", "/src/bin/www"]
+
