@@ -9,3 +9,5 @@
 #Backupfiles
 *.bk
 
+#Logfiles
+/logs/
