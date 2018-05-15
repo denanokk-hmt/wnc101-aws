@@ -11,9 +11,10 @@ var FileStreamRotator = require('file-stream-rotator');
 fs.existsSync(LOGDIR) || fs.mkdirSync(LOGDIR)
 
 /*******************************
- * ACCESS LOG
+ * ACCESS LOG for morgan
  * Args
-********************************/
+ * !!!TZ is UTC!!! UTC+9hours=JST
+*******************************/
 var accessLog = function () {
 	//Overwrite console log
 	var accessLogStream = FileStreamRotator.getStream({
@@ -25,6 +26,43 @@ var accessLog = function () {
 	return accessLogStream;
 };
 module.exports.access = accessLog;
+
+/*******************************
+ * ACCESS LOG
+ * Args
+ * 	req:[object] express req object
+ * 	stdoutFlag:[boolean] true:画面出力をする
+ * 	writeingFlag:[boolean] true:logファイルに書き込む
+ *  date:[date] 省略可能
+********************************
+var acccessLog = function (req, stdoutFlag, writingFlag, date) {
+	//date
+	if (!date) {
+		var date = dateformat(new Date(), 'yyyymmdd-HH:MM:ss:l');
+	}
+	//
+	str =　req.headers.host+date+req.method+req.originalUrl+req.httpVersion
+	//Message
+	var msg = '[ACC]' + date + '|' + str;	
+
+
+	//Logging
+	if (stdoutFlag == true) {
+		console.log(msg);
+	}
+	//Overwrite console log
+	if (writingFlag == true) {
+		var systemLogStream = FileStreamRotator.getStream({
+			filename: LOGDIR + '/system_%DATE%.log',
+			frequency: 'daily',
+			verbose: false,
+			date_format: "YYYY-MM-DD"
+		});
+		systemLogStream.write(util.format(msg) + '\n');
+	}
+};
+module.exports.system = acccessLog;
+*/
 
 /*******************************
  * SYSTEM LOG
@@ -112,7 +150,7 @@ var errorLog = function (str, stdoutFlag, writingFlag, date) {
 	//Overwrite console log
 	if (writingFlag == true) {
 		var errorLogStream = FileStreamRotator.getStream({
-			filename: LOGDIR + '/console_%DATE%.log',
+			filename: LOGDIR + '/error_%DATE%.log',
 			frequency: 'daily',
 			verbose: false,
 			date_format: "YYYY-MM-DD"
