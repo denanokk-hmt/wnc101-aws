@@ -3,6 +3,8 @@
 var express = require('express');
 var router = express.Router();
 var pt = require('promise-timeout');
+var logger = require('../modules/log.js');
+var dateformat = require('dateformat');
 
 //System variables
 var env = require('../config/watson.json');
@@ -21,25 +23,23 @@ var conversation = new ConversationV1({
 
 //Roting from /conversation?serach={user input word}
 router.get('/', function(req, res, next) {
-
   //Request to Watson Conversation API & Respons  
-  watosnConversationAPI(req, res); 
+  watosnConversationAPI(req, res);
 });
 
 //Watson Conversation Q & A
 function watosnConversationAPI(req, res) {
 
-  //User Question
-  var req_url = decodeURIComponent(req.url);
-  var search = req.query.text.replace(/\r?\n/g,"");
-  //console.log(req);
-  console.log(search);
+  //Logging Data
+  var logID = '[' + Math.floor(Math.random()*Math.floor(100000)) + ']';
+  var logDate = logID + dateformat(new Date(), 'yyyymmdd-HH:MM:ss:l');
+  var localFlag = (req.headers.host.split(":")[0] == 'localhost' || '127.0.0.1')? true : false; 
+  var req_url = decodeURIComponent(req.baseUrl);
+  var quest = req.query.text.replace(/\r?\n/g,"");
 
-  /*
-  //Sentence func testing
-  var sentence = require('../modules/sentence.js');
-  sentence.func(search);
-  */
+  //Logging
+  //logger.system('url:' + req_url, localFlag, true, logDate);
+  //logger.system('quest:' + quest, localFlag, true, logDate);
 
   //Get Answer from Watson conversation
   var watsonAnswer = function(question) {
@@ -76,7 +76,7 @@ function watosnConversationAPI(req, res) {
             var confidence = [ response.intents[0].confidence, response.entities[0].confidence];
           }
 
-          //Return messages wiht success
+          //Return success message with OK-SKY responce format
           resolve(
             {
               conversation_id : response.context.conversation_id,
@@ -117,14 +117,19 @@ function watosnConversationAPI(req, res) {
       result.entities = 'Not enough Confidene(<' + conf.confidence_exclusion + ')'; 
     }
 
-    //result log to STDOUT
-    console.log(result); 
+    //Logging 
+    //logger.systemJSON(result, localFlag, true, logDate);
+    var logOutStr = 'quest:' + quest + 
+                    '|' + 'answer:' + result.text.replace(/\r?\n/g,"") + 
+                    '|' + 'intents:' + result.intents + 
+                    '|' + 'entities:' + result.entities;
+    logger.system(logOutStr, localFlag, true, logDate);
 
     //Retrun formatting JSON answers
     return {
       searcher_id: result.conversation_id,
       url: req_url,
-      text: search,
+      text: quest,
       answer_list: [
         {
           answer: result.text,
@@ -145,15 +150,16 @@ function watosnConversationAPI(req, res) {
     res.send(answerFormat2Json(result));
   };
 
-  //Needs minimus search length & care of exclusion strings.
-  if (valid.func(search)) {
+  //Needs minimus quest length & care of exclusion strings.
+  if (valid.func(quest)) {
 
     //Call Watson Answer & response send(Timeout 10second)
-    pt.timeout(watsonAnswer(search), conf.watson_timeout)
+    pt.timeout(watsonAnswer(quest), conf.watson_timeout)
     .then(function(answer) {
       resResult(answer);
     }).catch(function(error) {
-      console.error(error); //erorr log to STDERR 
+      //console.error(error); //erorr log to STDERR 
+      logger.error(error, localFlag, true, logDate);
       resResult(error);
     });
 

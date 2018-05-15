@@ -4,10 +4,14 @@
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
-var morgan = require('morgan');
-//var expressSession = require('express-session');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+
+//Require Log module
+var morgan = require('morgan');
+var logger = require('./modules/log.js');
+
+//var expressSession = require('express-session');
 //require('dotenv').config();
 
 //Require of router middlewares
@@ -28,7 +32,13 @@ app.set('view engine', 'jade');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
+
+//ACCESS LOG
+var accessLogStream = logger.access();
+app.use(morgan('combined', {stream: accessLogStream}));
 app.use(morgan('dev'));
+
+//
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());

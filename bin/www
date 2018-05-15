@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 var app = require('../app');
-var debug = require('debug')('watson-node-connection:server');
+var debug = require('debug')('wnc:server');
 var http = require('http');
 
 /**
