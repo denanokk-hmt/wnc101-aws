@@ -7,7 +7,7 @@ FROM node:8.11.1
 
 ADD . /src
 COPY package.json /src/package.json
-RUN cd /src; npm install --save
+RUN cd /src; npm install --save --no-audit
 RUN npm install pm2 -g
 
 COPY . /src

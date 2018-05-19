@@ -18,10 +18,10 @@ fs.existsSync(LOGDIR) || fs.mkdirSync(LOGDIR)
 var accessLog = function () {
 	//Overwrite console log
 	var accessLogStream = FileStreamRotator.getStream({
-		filename: LOGDIR + '/access_%DATE%.log',
+		filename: LOGDIR + '/%DATE%_access.log',
 		frequency: 'daily',
 		verbose: false,
-		date_format: "YYYY-MM-DD"
+		date_format: "YYYYMMDD"
 	});
 	return accessLogStream;
 };
@@ -53,10 +53,10 @@ var acccessLog = function (req, stdoutFlag, writingFlag, date) {
 	//Overwrite console log
 	if (writingFlag == true) {
 		var systemLogStream = FileStreamRotator.getStream({
-			filename: LOGDIR + '/system_%DATE%.log',
+			filename: LOGDIR + '/%DATE%_system.log',
 			frequency: 'daily',
 			verbose: false,
-			date_format: "YYYY-MM-DD"
+			date_format: "YYYYMMDD"
 		});
 		systemLogStream.write(util.format(msg) + '\n');
 	}
@@ -78,7 +78,7 @@ var systemLog = function (str, stdoutFlag, writingFlag, date) {
 		var date = dateformat(new Date(), 'yyyymmdd-HH:MM:ss:l');
 	}
 	//Message
-	var msg = '[INFO]' + date + '|' + str;	
+	var msg = '[INFO]|' + date + '|' + str;	
 	//Logging
 	if (stdoutFlag == true) {
 		console.log(msg);
@@ -86,10 +86,10 @@ var systemLog = function (str, stdoutFlag, writingFlag, date) {
 	//Overwrite console log
 	if (writingFlag == true) {
 		var systemLogStream = FileStreamRotator.getStream({
-			filename: LOGDIR + '/system_%DATE%.log',
+			filename: LOGDIR + '/%DATE%_system.log',
 			frequency: 'daily',
 			verbose: false,
-			date_format: "YYYY-MM-DD"
+			date_format: "YYYYMMDD"
 		});
 		systemLogStream.write(util.format(msg) + '\n');
 	}
@@ -118,10 +118,10 @@ var JSONArrayLog = function (str, stdoutFlag, writingFlag, date) {
 	//Overwrite console log
 	if (writingFlag == true) {
 		var systemLogStream = FileStreamRotator.getStream({
-			filename: LOGDIR + '/system_%DATE%.log',
+			filename: LOGDIR + '/%DATE%_system.log',
 			frequency: 'daily',
 			verbose: false,
-			date_format: "YYYY-MM-DD"
+			date_format: "YYYYMMDD"
 		});
 		systemLogStream.write(util.format(msg) + '\n');
 	}
@@ -142,7 +142,7 @@ var errorLog = function (str, stdoutFlag, writingFlag, date) {
 		var date = dateformat(new Date(), 'yyyymmdd-HH:MM:ss:l');
 	}
 	//Message
-	var msg = '[INFO]' + date + '|' + str;
+	var msg = '[ERROR]' + date + '|' + str;
 	//Logging
 	if (stdoutFlag == true) {
 		console.error(msg);
@@ -150,10 +150,10 @@ var errorLog = function (str, stdoutFlag, writingFlag, date) {
 	//Overwrite console log
 	if (writingFlag == true) {
 		var errorLogStream = FileStreamRotator.getStream({
-			filename: LOGDIR + '/error_%DATE%.log',
+			filename: LOGDIR + '/%DATE%_error.log',
 			frequency: 'daily',
 			verbose: false,
-			date_format: "YYYY-MM-DD"
+			date_format: "YYYYMMDD"
 		});
 		errorLogStream.write(util.format(msg) + '\n');
 	}

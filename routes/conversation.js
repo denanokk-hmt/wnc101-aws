@@ -17,8 +17,7 @@ var ConversationV1 = require('watson-developer-cloud/conversation/v1');
 var conversation = new ConversationV1({
   username : env.CONVERSATION_USERNAME,
   password : env.CONVERSATION_PASSWORD,
-  path : { workspace_id : env.WORKSPACE_ID },
-  version_date : '2018-04-01'
+  version_date : '2018-05-23'
 });
 
 //Roting from /conversation?serach={user input word}
@@ -46,7 +45,9 @@ function watosnConversationAPI(req, res) {
 
       //call watson conversation with Promise
       return new Promise(function(resolve, reject) {
-        conversation.message({ input: { text: question} }, function(err, response) {
+        conversation.message({ 
+          workspace_id : env.WORKSPACE_ID,
+          input: { text: question} }, function(err, response) {
 
           //Return error
           if (err) {  
@@ -107,8 +108,8 @@ function watosnConversationAPI(req, res) {
     } else if (result.error) {
       //Watson Converation API Error
       result.text = default_msg.watson_converation_api_error;
-      result.intents = 'Watson conversation error';
-      result.entities = 'Watson conversation error';
+      result.intents = 'Watson Assistant error';
+      result.entities = 'Watson Assistant error';
       result.confidence = [ 0, 0 ];
     } else if (result.confidence < conf.confidence_exclusion) {
       //Confidence Error
@@ -152,15 +153,20 @@ function watosnConversationAPI(req, res) {
 
   //Needs minimus quest length & care of exclusion strings.
   if (valid.func(quest)) {
+    process.on('unhandledRejection', console.dir);
 
     //Call Watson Answer & response send(Timeout 10second)
     pt.timeout(watsonAnswer(quest), conf.watson_timeout)
     .then(function(answer) {
       resResult(answer);
     }).catch(function(error) {
+      console.log(error);
       //console.error(error); //erorr log to STDERR 
       logger.error(error, localFlag, true, logDate);
-      resResult(error);
+      //set default error result
+      var result = [];
+      result.error = error;
+      resResult(result);
     });
 
   } else {

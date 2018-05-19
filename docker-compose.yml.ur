@@ -2,7 +2,7 @@ version: '2'
 
 services:
   nodeapp:
-    image: wnc:1.2-dev
+    image: wnc:1.2-ur
     ports:
       - "8080:8080"
 
