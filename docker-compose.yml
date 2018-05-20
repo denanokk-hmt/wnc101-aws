@@ -6,7 +6,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - /usr/local/var/log:/logs/:rw
+      - /usr/local/var/log:/logs-wnc/:rw
 
   nginx:
     image: nginx

@@ -1,7 +1,6 @@
 'use strict'
 
-//const LOGDIR = '../logs_wnc';	//log dir
-const LOGDIR = '.logs';	//log dir
+const LOGDIR = './logs-wnc';	//log dir
 
 var dateformat = require('dateformat');
 var fs = require('fs');
