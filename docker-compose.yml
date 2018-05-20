@@ -5,6 +5,8 @@ services:
     image: wnc:1.2-dev
     ports:
       - "8080:8080"
+    volumes:
+      - /usr/local/var/log:/logs/:rw
 
   nginx:
     image: nginx
