@@ -13,6 +13,7 @@ var logger = require('./modules/log.js');
 
 //var expressSession = require('express-session');
 //require('dotenv').config();
+var env = require('./config/env.json');
 
 //Require of router middlewares
 var index = require('./routes/index');
@@ -50,7 +51,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 //Using routers middlewares
 app.use('/', index);
 app.use('/samples', samples);
-app.use('/v1/searchers/alias/main/search-answer', conversation);
+app.use('/v1/searchers/alias/' + env.searcher_id + '/search-answer', conversation);
 app.use('/qa_curl_test', qa_curl_test);
 
 // catch 404 and forward to error handler

@@ -11,8 +11,8 @@ var http = require('http');
  * Get port from environment and store in Express.
  */
 
-//var port = normalizePort(process.env.PORT || '3000');
-var port = 8080;
+var env = require('../config/env.json');
+var port = (env.environment = 'production')? 8080 : 3000;
 app.set('port', port);
 
 /**
