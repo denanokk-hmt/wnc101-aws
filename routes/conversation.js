@@ -50,7 +50,7 @@ function watosnConversationAPI(req, res) {
           input: { text: question} }, function(err, response) {
 
           //Return error
-          if (err) {  
+          if (err) {
             reject(err);
             return;
           }
@@ -118,10 +118,13 @@ function watosnConversationAPI(req, res) {
       result.entities = 'Not enough Confidene(<' + conf.confidence_exclusion + ')'; 
     }
 
+    //Case Silence Answer
+    var result_text = (result.text)? result.text.replace(/\r?\n/g,"") : "";
+
     //Logging 
-    //logger.systemJSON(result, localFlag, true, logDate);
+    //logger.systemJSON(result, localFlag, true, logDate);    
     var logOutStr = 'quest:' + quest + 
-                    '|' + 'answer:' + result.text.replace(/\r?\n/g,"") + 
+                    '|' + 'answer:' + result_text + 
                     '|' + 'intents:' + result.intents + 
                     '|' + 'entities:' + result.entities;
     logger.system(logOutStr, localFlag, true, logDate);
@@ -133,7 +136,7 @@ function watosnConversationAPI(req, res) {
       text: quest,
       answer_list: [
         {
-          answer: result.text,
+          answer: result_text,
           intents: result.intents,
           entities: result.entities,
           cos_similarity: 0.8,
