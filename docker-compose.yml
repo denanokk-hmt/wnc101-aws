@@ -1,3 +1,7 @@
+
+#######################
+#production for ur    #
+#######################
 version: '2'
 
 services:
@@ -18,3 +22,22 @@ services:
 #      - /var/log/nginx:/logs-nginx:rw
 
       
+#######################
+#develop for local    #
+#######################
+#version: '2'
+#
+#services:
+#  nodeapp:
+#    image: wnc:1.2-dev
+#    ports:
+#      - "8080:8080"
+#
+#  nginx:
+#    image: nginx
+#    ports:
+#      - "80:80"
+#    volumes:
+#      - /etc/nginx:/etc/nginx:ro
+#
+ 
