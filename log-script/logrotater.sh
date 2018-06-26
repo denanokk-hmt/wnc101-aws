@@ -99,6 +99,23 @@ END=$(echo ${LOGS[${#LOGS[@]}-1]} | cut -d"_" -f1)
 echo "${#LOGS[@]}ファイルをローテート/期間:${BEGIN}-${END}"
 
 #########################
+#create log detail dir on local(year, month, kind
+YEARD=${RDATE:0:4}
+if [ -e ${SYSD}/LOG/${YEARD} ]; then
+  :
+else
+  mkdir ${SYSD}/LOG/${YEARD}
+  ERR_CHK "ローテート処理ログディレクトの作成(YEAR)"
+fi
+MONTHD=${RDATE:4:2}
+if [ -e ${SYSD}/LOG/${MONTHD} ]; then
+  :
+else
+  mkdir ${SYSD}/LOG/${MONTHD}
+  ERR_CHK "ローテート処理ログディレクトの作成(MONTH)"
+fi
+
+#########################
 #Archive
 ZIPFILE=${BEGIN}-${END}.${HOSTNAME}.zip
 if [ -e ./backup ]; then
