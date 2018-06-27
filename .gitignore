@@ -11,3 +11,6 @@
 
 #Logfiles
 /logs-wnc/
+
+/log-script/ENV/
+/log-script/S3_DL/
