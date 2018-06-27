@@ -37,10 +37,25 @@ ENV=${SYSD}/ENV/env
 S3_DL=${SYSD}/S3_DL
 tmp=${S3_DL}/tmp
 
+
+################################
+#S3 DL先Dir作成
+################################
+if [ -e ${S3_DL} ]; then
+  :
+else
+  mkdir ${S3_DL}
+  ERR_CHK "S3 DLディレクトの作成"
+fi
+
+
 #########################
 #レポートの清掃
 rm -rf ${SYSD}/REPORT
+ERR_CHK "REPORTディレクトを初期化"
+
 mkdir ${SYSD}/REPORT
+ERR_CHK "REPORTディレクトの作成"
 
 
 ################################
@@ -144,6 +159,7 @@ fi
 ################################
 echo "S3バケットのログ情報取得中..."
 aws s3 ls ${S3_BUCKET_ADDR}/backup/${CUST} --recursive | cut -d"/" -f3 > $tmp-s3-ls
+ERR_CHK "S3バケットのログ情報取得"
 cat $tmp-s3-ls | awk 'BEGIN {FS="."} {print $1,$2,sprintf("%s.%s.%s",$1,$2,$3)}' | sort > $tmp-s3-ls-from-to      
 
 
@@ -151,7 +167,6 @@ cat $tmp-s3-ls | awk 'BEGIN {FS="."} {print $1,$2,sprintf("%s.%s.%s",$1,$2,$3)}'
 #S3からホスト名を取得(uniq)
 ################################
 echo "アプリサーバーホスト情報取得中..."
-#HOST_NAMES=`aws s3 ls ${S3_BUCKET_ADDR}/backup/ur --recursive | cut -d"/" -f3 | cut -d"." -f2`
 HOST_NAMES=`cat $tmp-s3-ls | cut -d"/" -f3 | cut -d"." -f2`
 rm -f $tmp-s3-hosts*
 for host in $(echo ${HOST_NAMES}); do
@@ -164,7 +179,6 @@ cat $tmp-s3-hosts | awk '!colname[$1]++{print $1}' | sort > $tmp-s3-hosts-uniq
 #ホスト名Dirを作成
 ################################
 echo "アプリサーバーホストDir作成中..."
-#cat $tmp-s3-hosts-uniq
 for host in $(cat $tmp-s3-hosts-uniq); do
   if [ -d "${S3_DL}/$host" ]; then
     :
@@ -174,6 +188,7 @@ for host in $(cat $tmp-s3-hosts-uniq); do
     mkdir ${S3_DL}/$host/system
     mkdir ${S3_DL}/$host/error
   fi
+  ERR_CHK "S3_DLにホスト名Dirの確認or作成"
 done
 
 
@@ -189,6 +204,7 @@ join $tmp-s3-from-to $tmp-s3-ls-from-to > $tmp-s3-dl
 for dl in $(cat $tmp-s3-dl | awk '{print $3}'); do
   aws s3 cp s3://logs.wnc.solairo-ai.com/backup/ur/${dl} ${S3_DL}/
 done
+ERR_CHK "S3からログを取得"
 
 
 #########################
@@ -209,6 +225,7 @@ do
   find ${S3_DL}/$d -type f -name "*error.log" | xargs -IX mv X ${S3_DL}/$d/error/${FROM_TO}
   rm -rf ${S3_DL}/$d/usr
 done
+ERR_CHK "ログファイルの振り分け"
 
 
 #########################
@@ -263,16 +280,13 @@ do
     cp ${S3_DL}/$d/error/${FROM_TO}.error.log ${SYSD}/REPORT/$d.${FROM_TO}.error.log
   fi
 done
+ERR_CHK "ログファイルの統合"
 
 
 #########################
 #$tmpファイルの清掃
 rm -f $tmp-*
 
-
-#########################
-#ERR CHECK
-#ERR_CHK "ローテート済のログファイルを削除"
 
 
 echo "Exec fin."
