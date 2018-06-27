@@ -290,5 +290,6 @@ rm -f $tmp-*
 
 
 echo "Exec fin."
+echo "Complete. Please check REPORT Folder."
 
 exit 0
