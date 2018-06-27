@@ -37,6 +37,11 @@ ENV=${SYSD}/ENV/env
 S3_DL=${SYSD}/S3_DL
 tmp=${S3_DL}/tmp
 
+#########################
+#レポートの清掃
+rm -rf ${SYSD}/REPORT
+mkdir ${SYSD}/REPORT
+
 
 ################################
 #引数
@@ -180,7 +185,6 @@ cut -d "." -f1 |
 awk -v from=${FROM} -v to=${TO} 'BEGIN {FS="-"} $2>=from&&$1<from || $1>=from&&$2<=to || $1<=to&&$2>=from {print $1,$2}' | awk '!colname[$1$2]++{print $1,$2}' | sort | awk '{print(sprintf("%s-%s",$1,$2))}' > $tmp-s3-from-to
 
 join $tmp-s3-from-to $tmp-s3-ls-from-to > $tmp-s3-dl
-cat $tmp-s3-dl 
 
 for dl in $(cat $tmp-s3-dl | awk '{print $3}'); do
   aws s3 cp s3://logs.wnc.solairo-ai.com/backup/ur/${dl} ${S3_DL}/
@@ -203,7 +207,7 @@ do
   find ${S3_DL}/$d -type f -name "*access.log" | xargs -IX mv X ${S3_DL}/$d/access/${FROM_TO}
   find ${S3_DL}/$d -type f -name "*system.log" | xargs -IX mv X ${S3_DL}/$d/system/${FROM_TO}
   find ${S3_DL}/$d -type f -name "*error.log" | xargs -IX mv X ${S3_DL}/$d/error/${FROM_TO}
-  #rm -rf ${S3_DL}/$d/usr
+  rm -rf ${S3_DL}/$d/usr
 done
 
 
@@ -235,33 +239,30 @@ done
 #振り分けたログファイルを統合する
 echo "ログデータを統合中..."
 cat $tmp-s3-dl | while read line
-LOGS_PATH=()
 do
   d=`echo $line | awk '{print $2}'`   #ホスト名Dir
-  
-  cat ${S3_DL}/$d/access/${FROM_TO}/* >> ${S3_DL}/$d/access/${FROM_TO}.access.log
-  if [ -z "${S3_DL}/$d/access/${FROM_TO}.access.log" ]; then
-    rm -f ${S3_DL}/$d/access/${FROM_TO}.access.log
+
+  if [ -z "$(ls ${S3_DL}/$d/access/${FROM_TO})" ]; then
+    rm -rf ${S3_DL}/$d/access/${FROM_TO}/
   else
-    :  
+    cat ${S3_DL}/$d/access/${FROM_TO}/* >> ${S3_DL}/$d/access/${FROM_TO}.access.log
+    cp ${S3_DL}/$d/access/${FROM_TO}.access.log ${SYSD}/REPORT/$d.${FROM_TO}.access.log 
   fi
 
-  rm -rf ${S3_DL}/$d/access/${FROM_TO}/
-
-  cat ${S3_DL}/$d/system/${FROM_TO}/* >> ${S3_DL}/$d/system/${FROM_TO}.system.log
-  [ -z "${S3_DL}/$d/system/${FROM_TO}.system.log" ] && rm -f ${S3_DL}/$d/system/${FROM_TO}.system.log || :
-  rm -rf ${S3_DL}/$d/system/${FROM_TO}/
+  if [ -z "$(ls ${S3_DL}/$d/system/${FROM_TO})" ]; then
+    rm -rf ${S3_DL}/$d/system/${FROM_TO}/
+  else
+    cat ${S3_DL}/$d/system/${FROM_TO}/* >> ${S3_DL}/$d/system/${FROM_TO}.system.log
+    cat ${S3_DL}/$d/system/${FROM_TO}.system.log | awk 'BEGIN {FS="|";OFS=","} {print($2,sprintf("\"%s\"",$3),sprintf("\"%s\"",$4),sprintf("\"%s\"",$5),sprintf("\"%s\"",$6))}' > ${SYSD}/REPORT/$d.${FROM_TO}.system.log.csv 
+  fi
   
-  cat ${S3_DL}/$d/error/${FROM_TO}/* >> ${S3_DL}/$d/error/${FROM_TO}.error.log
-  [ -z "${S3_DL}/$d/error/${FROM_TO}.error.log" ] && rm -f ${S3_DL}/$d/error/${FROM_TO}.error.log || :
-  rm -rf ${S3_DL}/$d/error/${FROM_TO}/
+  if [ -z "$(ls ${S3_DL}/$d/error/${FROM_TO})" ]; then
+    rm -rf ${S3_DL}/$d/error/${FROM_TO}/
+  else
+    cat ${S3_DL}/$d/error/${FROM_TO}/* >> ${S3_DL}/$d/error/${FROM_TO}.error.log
+    cp ${S3_DL}/$d/error/${FROM_TO}.error.log ${SYSD}/REPORT/$d.${FROM_TO}.error.log
+  fi
 done
-
-
-#########################
-#CSV化
-
-
 
 
 #########################
@@ -272,7 +273,6 @@ rm -f $tmp-*
 #########################
 #ERR CHECK
 #ERR_CHK "ローテート済のログファイルを削除"
-
 
 
 echo "Exec fin."
