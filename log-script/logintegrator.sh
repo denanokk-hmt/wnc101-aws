@@ -67,7 +67,7 @@ CUST=$1
 FROM_TO=$2
 FROM=${FROM_TO:0:8}
 TO=${FROM_TO:9:8}
-RANDOM_QTY=${3:-20}
+RANDOM_QTY=${3:-0}
 
 
 ################################
@@ -297,9 +297,15 @@ nl $tmp-sys-i | sed $'s/\t/,/g' | sed -e 's/^ *//g' | sed -e 's/quest://g' | sed
 cat $tmp-sys-i-nl | awk 'BEGIN{FS=",";OFS=","} {print $1,$2}' | sed -e 's/]/],/g' > $tmp-sys-i-dt
 #join
 join -t"," -o 1.1,1.3,2.3,2.4,2.5,2.6 $tmp-sys-i-dt $tmp-sys-i-nl | sort > $tmp-sys-i-d
-perl -MList::Util=shuffle -e 'print shuffle(<>)' < $tmp-sys-i-d | tail -n ${RANDOM_QTY} > $tmp-sys-i-random
-echo "no,datetime,quest,answer,intent,entity" > ${SYSD}/REPORT/RANDOM/${FROM_TO}.random${RANDOM_QTY}.system.log.csv
-cat $tmp-sys-i-random | sort -t "," -k1 -n >> ${SYSD}/REPORT/RANDOM/${FROM_TO}.random${RANDOM_QTY}.system.log.csv
+if [ "${RANDOM_QTY}" -eq 0 ]; then
+  RQ="all"
+  cat $tmp-sys-i-d > $tmp-sys-i-random
+else
+  RQ="random${RANDOM_QTY}"
+  perl -MList::Util=shuffle -e 'print shuffle(<>)' < $tmp-sys-i-d | tail -n ${RANDOM_QTY} > $tmp-sys-i-random
+fi
+echo "no,datetime,quest,answer,intent,entity" > ${SYSD}/REPORT/RANDOM/${FROM_TO}.${RQ}.system.log.csv
+cat $tmp-sys-i-random | sort -t "," -k1 -n >> ${SYSD}/REPORT/RANDOM/${FROM_TO}.${RQ}.system.log.csv
 
 
 #########################
