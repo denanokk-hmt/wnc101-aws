@@ -57,6 +57,8 @@ ERR_CHK "REPORTディレクトを初期化"
 mkdir ${SYSD}/REPORT
 ERR_CHK "REPORTディレクトの作成"
 
+mkdir ${SYSD}/REPORT/RANDOM
+ERR_CHK "RANDOMディレクトの作成"
 
 ################################
 #引数
@@ -65,6 +67,7 @@ CUST=$1
 FROM_TO=$2
 FROM=${FROM_TO:0:8}
 TO=${FROM_TO:9:8}
+RANDOM_QTY=${3:-20}
 
 
 ################################
@@ -260,33 +263,48 @@ do
   d=`echo $line | awk '{print $2}'`   #ホスト名Dir
 
   if [ -z "$(ls ${S3_DL}/$d/access/${FROM_TO})" ]; then
-    rm -rf ${S3_DL}/$d/access/${FROM_TO}/
+    :
   else
     cat ${S3_DL}/$d/access/${FROM_TO}/* >> ${S3_DL}/$d/access/${FROM_TO}.access.log
     cp ${S3_DL}/$d/access/${FROM_TO}.access.log ${SYSD}/REPORT/$d.${FROM_TO}.access.log 
   fi
+  rm -rf ${S3_DL}/$d/access/${FROM_TO}/
 
   if [ -z "$(ls ${S3_DL}/$d/system/${FROM_TO})" ]; then
-    rm -rf ${S3_DL}/$d/system/${FROM_TO}/
+    :
   else
     cat ${S3_DL}/$d/system/${FROM_TO}/* >> ${S3_DL}/$d/system/${FROM_TO}.system.log
     cat ${S3_DL}/$d/system/${FROM_TO}.system.log | awk 'BEGIN {FS="|";OFS=","} {print($2,sprintf("\"%s\"",$3),sprintf("\"%s\"",$4),sprintf("\"%s\"",$5),sprintf("\"%s\"",$6))}' > ${SYSD}/REPORT/$d.${FROM_TO}.system.log.csv 
   fi
+    rm -rf ${S3_DL}/$d/system/${FROM_TO}/
   
   if [ -z "$(ls ${S3_DL}/$d/error/${FROM_TO})" ]; then
-    rm -rf ${S3_DL}/$d/error/${FROM_TO}/
+    :
   else
     cat ${S3_DL}/$d/error/${FROM_TO}/* >> ${S3_DL}/$d/error/${FROM_TO}.error.log
     cp ${S3_DL}/$d/error/${FROM_TO}.error.log ${SYSD}/REPORT/$d.${FROM_TO}.error.log
   fi
+  rm -rf ${S3_DL}/$d/error/${FROM_TO}/
 done
 ERR_CHK "ログファイルの統合"
 
 
 #########################
+#ランダムにシステムログを抜き出し、システムログを結合
+echo "システムログを統合中..."
+cat ${SYSD}/REPORT/*.${FROM_TO}.system.log.csv > $tmp-sys-i
+nl $tmp-sys-i | sed $'s/\t/,/g' | sed -e 's/^ *//g' | sed -e 's/quest://g' | sed -e 's/answer://g' | sed -e 's/intents://g' | sed -e 's/entities://g' > $tmp-sys-i-nl
+cat $tmp-sys-i-nl | awk 'BEGIN{FS=",";OFS=","} {print $1,$2}' | sed -e 's/]/],/g' > $tmp-sys-i-dt
+#join
+join -t"," -o 1.1,1.3,2.3,2.4,2.5,2.6 $tmp-sys-i-dt $tmp-sys-i-nl | sort > $tmp-sys-i-d
+perl -MList::Util=shuffle -e 'print shuffle(<>)' < $tmp-sys-i-d | tail -n ${RANDOM_QTY} > $tmp-sys-i-random
+echo "no,datetime,quest,answer,intent,entity" > ${SYSD}/REPORT/RANDOM/${FROM_TO}.random${RANDOM_QTY}.system.log.csv
+cat $tmp-sys-i-random | sort -t "," -k1 -n >> ${SYSD}/REPORT/RANDOM/${FROM_TO}.random${RANDOM_QTY}.system.log.csv
+
+
+#########################
 #$tmpファイルの清掃
 rm -f $tmp-*
-
 
 
 echo "Exec fin."
