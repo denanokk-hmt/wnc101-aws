@@ -1,4 +1,4 @@
-#wnc:1.3.3
+#wnc:1.3
  
 FROM node:8.11.1
 #FROM centos
