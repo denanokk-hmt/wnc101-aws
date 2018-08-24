@@ -6,7 +6,7 @@ version: '2'
 
 services:
   nodeapp:
-    image: wnc:1.3.4-dev
+    image: wnc:1.3.4-ur-prd
     ports:
       - "8080:8080"
     volumes:
